@@ -9,6 +9,20 @@ const App = () => {
     completed: false,
   })
 
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/tasks'); 
+      setTasks(response.data); 
+    }
+    catch (error) {
+      console.error("Error fetching data : ", error); 
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
   const addTask = async () => {
     try {
       const response = await axios.post('http://localhost:5000/tasks', newTask); 
@@ -27,7 +41,7 @@ const App = () => {
 
   const updateTask = async (taskId, updates) => {
     try {
-      await axios.put('http://localhost:5000/tasks', updates); 
+      await axios.put(`http://localhost:5000/tasks/${taskId}`, updates); 
       const updatedTasks = tasks.map(task => {
         if (task._id === taskId) {
           return {...task, ...updates}
