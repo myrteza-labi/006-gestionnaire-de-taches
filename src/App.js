@@ -59,7 +59,7 @@ const App = () => {
   const deleteTask = async (taskId) => {
     try {
       await axios.delete(`http://localhost:5000/tasks/${taskId}`); 
-      const updatedTasks = tasks.filter((task) => task.id !== taskId); 
+      const updatedTasks = tasks.filter((task) => task._id !== taskId); 
       setTasks(updatedTasks); 
     }
     catch (error) {
