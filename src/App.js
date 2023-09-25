@@ -21,7 +21,7 @@ const App = () => {
 
   useEffect(() => {
     getTask(); 
-  }, []); 
+  }, [tasks]); 
 
   const addTask = async () => {
     try {
