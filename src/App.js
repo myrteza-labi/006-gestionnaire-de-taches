@@ -42,18 +42,8 @@ const App = () => {
 
   const updateTask = async (taskId, updates) => {
     try {
-      // pourquoi passer l'id directement dans l'url ? Puis-je le passer en parametre comme les arguments ?
-      const updatedTask = await axios.put(`http://localhost:5000/tasks/${taskId}`, updates); 
-      // tester la mise à jour avec la task contenu dans la reponse de la requete
-      const updatedTasks = tasks.map((task) => {
-        if(task._id === taskId) {
-          return {...task, ...updatedTask}
-        }
-        else {
-          return task
-        }
-      })
-      setTasks(updatedTasks); 
+      await axios.put(`http://localhost:5000/tasks/${taskId}`, updates); 
+      getTasks(); 
     }
     catch (error) {
       console.error("Erreur lors de la modification de la task", error); 
