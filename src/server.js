@@ -1,89 +1,103 @@
 const express = require('express'); 
-const app = express(); 
 const cors = require('cors'); 
-app.use(cors()); 
 const bodyParser = require('body-parser'); 
-app.use(bodyParser.json()); 
-const dbUri = 'mongodb://localhost/todolist';
-const mongoose = require('mongoose'); 
-const dbConfig = {
-  useNewUrlParser : true, 
-  useUnifiedTopology: true, 
-}
 const port = 5000; 
-  
-mongoose.connect(dbUri, dbConfig); 
-
+const app = express(); 
+app.use(cors()); 
+app.use(bodyParser.json()); 
+const mongoose = require('mongoose'); 
+const dbUri = "mongodb://localhost/todolist"
 const db = mongoose.connection; 
+const dbConfig = {
+  useNewUrlParser: true, 
+  useUnifiedTopology: true,
+}
 
-const taskSchema = new mongoose.Schema({
-  title: String, 
+mongoose.connect(dbUri,dbConfig); 
+
+const taskSchema = mongoose.Schema({
+  title : String, 
   description: String, 
   completed: Boolean,
 })
 
 const Task = mongoose.model('Task', taskSchema); 
 
-app.get('/tasks', async (req, res) => {
+db.once('open', () => {
+  console.log('Connexion à mongoDB réussi');
+});
+
+db.once('close', () => {
+  console.log('Deconnexion de mongoDB'); 
+}); 
+
+db.on('error', () => {
+  console.log('Erreur lors de la connexion à mongoDB');
+}); 
+
+app.get('/tasks', async (req,res) => {
   try {
-    const tasks = await Task.find(); 
-    res.json(tasks); 
+    const response = await Task.find(); 
+    res.json(response); 
   }
   catch(error) {
-    console.error("Erreur lors de la récupération des tasks", error); 
-  }
-})
-
-app.post('/tasks', async (req, res) => {
-  try {
-    const task = new Task(req.body);
-    await task.save(); 
-    res.json(task);
-  }
-  catch (error) {
     res.status(500).json({
-      message: "Erreur lors de la création de la task", 
+      message: "Erreur lors de la récupération des tasks", 
       error: error, 
-    });
+    })
   };
 });
 
-app.delete("/tasks/:taskId", async (req,res) => {
+app.post('/tasks', async (req,res) => {
   try {
-    const { taskId } = req.params; 
-    const response = await Task.findByIdAndDelete(taskId); 
-    res.json(response)
+    const task = new Task(req.body); 
+    await task.save(); 
+    res.status(201).json({
+      message: "Task ajouté avec succes", 
+      res: task,
+    })
   }
   catch (error) {
-    console.error("Erreur lors de la suppression de la task:", error); 
-  }; 
-}); 
+    res.status(500).json({
+      message: "Erreur lors de l'ajout de la task", 
+      error: error, 
+    })
+  };
+});
 
 app.put('/tasks/:taskId', async (req,res) => {
   try {
     const { taskId } = req.params; 
     const updates = req.body; 
-    const response = await Task.findByIdAndUpdate(taskId, updates); 
-    res.json(response); 
+    await Task.findByIdAndUpdate(taskId, updates); 
+    res.status(200).json({
+      message: "Task mis à jour avec succès"
+    })
   }
-catch (error) {
-  console.error("Erreur lors de la modification de la task", error); 
-}; 
-}); 
+  catch (error) {
+    res.status(500).json({
+      message: "Erreur lors de la mis à jour de la task", 
+      error: error
+    })
+  }
+})
 
-
-db.once("open", () => {
-  console.log("Connexion à mondoDB réussi");
-}); 
-
-db.on("close", () => {
-  console.log("Déconnexion de la base de données mongoDB"); 
-}); 
-
-db.on("error", async () => {
-  console.error("Erreur lors de la connexion à mongoDB", error); 
-}); 
+app.delete('/tasks/:taskId', async (req,res) => {
+  try {
+    const {taskId} = req.params; 
+    await Task.findByIdAndDelete(taskId); 
+    res.status(200).json({
+      message: "Task supprimé avec succès"
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Erreur lors de la suppression de la task", 
+      error: error,
+    });
+  };
+});
 
 app.listen(port, () => {
-  console.log(`Serveur en cours d'éxécution sur le port ${port}`)
-})
+  console.log(`Serveur en cours d'éxécution sur le port ${port}`); 
+}); 
