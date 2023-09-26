@@ -6,109 +6,99 @@ const App = () => {
   const [newTask, setNewTask] = useState({
     title: "", 
     description: "", 
-    completed: false
+    completed: false, 
   })
 
-  const getTask = async () => {
+  const getTasks = async () => {
     try {
       const response = await axios.get('http://localhost:5000/tasks'); 
       setTasks(response.data)
     }
-    catch (error) {
-      console.error("Erreur lors de la récupération des tasks:", error)
+    catch(error) {
+      console.error("Erreur lors de la recupération des tasks", error); 
     }
   }
 
   useEffect(() => {
-    getTask(); 
-  }, [tasks]); 
+    getTasks()
+  }, [tasks, newTask]); 
 
   const addTask = async () => {
     try {
-      await axios.post('http://localhost:5000/tasks', newTask); 
-      setTasks([...tasks, newTask]); 
+      const response = await axios.post('http://localhost:5000/tasks', newTask); 
+      console.log(response); 
       setNewTask({
         title: "", 
         description: "", 
-        completed: false,
+        completed: false, 
       })
     }
-    catch (error) {
-      console.error(
-        "Erreur lors de la création de la task (message provenant du front)",
-         error
-      ); 
+    catch(error) {
+      console.error("Erreur lors de l'ajout de la task", error); 
     }
   }
 
   const deleteTask = async (taskId) => {
     try {
       await axios.delete(`http://localhost:5000/tasks/${taskId}`); 
-      const updatedArray = tasks.filter((task) => task._id !== taskId); 
-      setTasks(updatedArray)
+      const updatedTasks = tasks.filter((task => task._id !== taskId)); 
+      setTasks(updatedTasks); 
     }
-    catch (error) {
-      console.error("Erreur lors de la suppression de la task", error)
-    }
-  }
+    catch(error) {
+      console.error("Erreur lors de la suppression de la task:", error); 
+    }; 
+  }; 
 
   const updateTask = async (taskId, updates) => {
     try {
       await axios.put(`http://localhost:5000/tasks/${taskId}`, updates); 
-      const updatedTasks = tasks.map((task) => {
-        if(task._id === taskId) {
-          return { ...task, ...updates}; 
-        } else {
-          return task
+      const updatedTask = tasks.map((task) => {
+        if (taskId === task.id) {
+          return {...task, ...updates}; 
         }
-      }); 
-      setTasks(updatedTasks); 
+        else {
+          return task; 
+        }
+      })
+      setTasks(updatedTask); 
     }
-    catch (error) {
-      console.error("Erreur lors de la modification de la task", error)
+    catch(error) {
+      console.error("Erreur lors de la modification de la task:", error)
     }
-  }
+  } 
 
   return (
     <div>
-      <h1>Todo list - Backend training - 006</h1>
+      <h1>Todo list - backend training 006</h1>
       <input
         type="text"
         placeholder="Task title"
+        onChange={(e) => setNewTask({...newTask, title: e.target.value})}
         value={newTask.title}
-        onChange={(e) => setNewTask({
-          ...newTask, title: e.target.value 
-        })}
       />
       <input 
         type="text"
         placeholder="Task description"
+        onChange={(e) => setNewTask({...newTask, description: e.target.value})}
         value={newTask.description}
-        onChange={(e) => setNewTask({
-          ...newTask, description : e.target.value 
-        })}
       />
-      <button onClick={addTask}>Add Task</button>
-      {
-        tasks && 
-        <ul>
-          {
+      <button onClick={addTask}>Add task</button>
+      <ul>
+        {
+          tasks && 
             tasks.map((task) => (
-                <li key={task._id}>
-                  <input 
-                    type="checkbox"
-                    checked={task.completed}  
-                    onChange={(e) => updateTask(task._id, {
-                      completed: e.target.checked
-                    })}
-                  />
-                  <span>{task.title} - {task.description}</span> 
-                  <button onClick={() => deleteTask(task._id)}>Delete</button>
-                </li>
+              <li key={task._id}>
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={(e) => updateTask(task._id, {...task, completed: e.target.checked})}
+                />
+                {task.title} - {task.description}
+                <button onClick={() => deleteTask(task._id)}>Delete</button>
+              </li>
             ))
-          }
-        </ul>
-      }
+        }
+      </ul>
     </div>
   )
 }

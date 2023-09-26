@@ -51,8 +51,8 @@ app.post('/tasks', async (req, res) => {
 app.delete("/tasks/:taskId", async (req,res) => {
   try {
     const { taskId } = req.params; 
-    await Task.findByIdAndDelete(taskId); 
-    res.json(tasks)
+    const response = await Task.findByIdAndDelete(taskId); 
+    res.json(response)
   }
   catch (error) {
     console.error("Erreur lors de la suppression de la task:", error); 
