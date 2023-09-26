@@ -1,79 +1,76 @@
-const mongoose = require('mongoose'); 
-const dbUri = "mongodb://localhost/todolist" 
-const dbConfig = {
-  useNewUrlParser : true, 
-  useUnifiedTopology: true
-}
 const express = require('express'); 
 const app = express(); 
-const cors = require('cors'); 
+const port = 5000; 
+const mongoose = require('mongoose');
+const dbUri = 'mongodb://localhost/todolist'; 
+const db = mongoose.connection; 
+const dbConfig = {
+  useNewUrlParser: true, 
+  useUnifiedTopology: true, 
+}
 const bodyParser = require('body-parser'); 
+const cors = require('cors'); 
 app.use(cors()); 
 app.use(bodyParser.json()); 
-const port = 5000; 
 
-const db = mongoose.connection; 
-
-mongoose.connect(dbUri, dbConfig); 
-
-
-const taskSchema = mongoose.Schema({
-  title: String, 
-  description: String, 
-  completed: Boolean, 
-})
-
-const Task = mongoose.model('Task', taskSchema)
+mongoose.connect(dbUri, dbConfig);
 
 db.once('open', () => {
-  console.log("Connexion à mongoDB réussi"); 
-})
+  console.log("Connection à mongoDB réussi"); 
+}); 
 
 db.once('close', () => {
-  console.log('Déconnexion de la base de données mongoDB'); 
-})
+  console.log("Deconnexion de mongoDB"); 
+}); 
 
 db.on('error', () => {
-  console.error('Erreur lors de la connexion à mongoDB'); 
+  console.error("Erreur lors de la connexion à mongoDB"); 
+  }
+)
+
+const taskSchema = mongoose.Schema({
+  title: String,
+  description: String, 
+  completed: Boolean
 })
+
+const Task = mongoose.model("Task", taskSchema)
 
 app.get('/tasks', async (req,res) => {
   try {
-    const response = await Task.find(); 
-    res.json(response);
+    const response = await Task.find();
+    res.json(response)
   }
-  catch (error) {
+  catch(error) {
     res.status(500).json({
       message: "Erreur lors de la récupération des tasks", 
-      error : error
-    });
-  };
-});
+      error: error
+    })
+  }
+})
 
-app.post('/tasks', async (req,res) => {
+app.post('/tasks', async (req, res) => {
   try {
     const task = new Task(req.body); 
     const response = await task.save(); 
-    res.status(201).json({
-      message: "Task créée avec succes",
-      response: response
-    });
-  } 
-  catch (error) {
+    res.json(response)
+  }
+  catch(error) {
     res.status(500).json({
       message: "Erreur lors de la création de la task", 
       error: error
-    });
-  };
-});
+    })
+  }
+})
 
 app.put('/tasks/:taskId', async (req,res) => {
   try {
     const { taskId } = req.params; 
-    const response = await Task.findByIdAndUpdate(taskId, req.body)
+    const updates = req.body; 
+    const response = await Task.findByIdAndUpdate(taskId, updates); 
     res.json(response); 
   }
-  catch (error) {
+  catch(error){
     res.status(500).json({
       message: "Erreur lors de la modification de la task", 
       error: error
@@ -83,18 +80,18 @@ app.put('/tasks/:taskId', async (req,res) => {
 
 app.delete('/tasks/:taskId', async (req,res) => {
   try {
-    const {taskId} = req.params; 
+    const { taskId } = req.params; 
     const response = await Task.findByIdAndDelete(taskId); 
     res.json(response); 
   }
-  catch(error) {
+  catch (error) {
     res.status(500).json({
       message: "Erreur lors de la suppression de la task", 
       error: error
-    })
-  }
-})
+    });
+  };
+});
 
 app.listen(port, () => {
-  console.log(`Serveur en cours d'éxécution sur le port ${port}`); 
+  console.log(`Server en cours d'éxécution sur le port ${port}`); 
 })
